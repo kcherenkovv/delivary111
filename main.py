@@ -19,7 +19,7 @@ FFMPEG_CMD = [
 process = subprocess.Popen(FFMPEG_CMD, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
 # Загрузка модели
-model = YOLO("yolov11s.onnx")
+model = YOLO("model_11v_optimized_nz.onnx")
 
 while True:
     raw_frame = process.stdout.read(WIDTH * HEIGHT * 3)  # 3 байта на пиксель (BGR)
