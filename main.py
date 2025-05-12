@@ -1,23 +1,42 @@
-import streamlit as st
-from ultralytics import YOLO
 import cv2
 import numpy as np
+from ultralytics import YOLO
 
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx")  # Используйте свою модель
+model = YOLO("model_11v_optimized_nz.onnx")  # замени на своё имя
 
-# Интерфейс Streamlit
-st.title("YOLO11 Live Inference (Cloud GPU)")
-img_buffer = st.camera_input("Включите веб-камеру")
+# Приём стрима
+cap = cv2.VideoCapture("udp://@0.0.0.0:5000", cv2.CAP_FFMPEG)
 
-if img_buffer:
-    # Преобразование кадра в numpy array
-    bytes_data = img_buffer.getvalue()
-    img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-    
-    # Детекция на GPU
-    results = model(img, device="cuda")  # Используем GPU
-    
-    # Визуализация
-    res_plotted = results[0].plot()  # Рамки и метки
-    st.image(res_plotted, channels="BGR")
+if not cap.isOpened():
+    print("Ошибка открытия входящего потока")
+    exit()
+
+# Отправка обработанного видео
+gst_out = (
+    'appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast '
+    '! rtph264pay config-interval=1 pt=96 ! udpsink host=<YOUR_LOCAL_IP> port=5001'
+)
+out = cv2.VideoWriter(gst_out, cv2.CAP_GSTREAMER, 0, 25, (640, 480), True)
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        continue
+
+    results = model(frame)
+    annotated_frame = results[0].plot()  # Рисуем боксы
+
+    # Изменение размера под оптимальную передачу
+    resized_frame = cv2.resize(annotated_frame, (640, 480))
+
+    out.write(resized_frame)
+
+    # Для дебага можно раскомментировать:
+    # cv2.imshow('Server Output', resized_frame)
+    # if cv2.waitKey(1) == ord('q'):
+    #     break
+
+cap.release()
+out.release()
+cv2.destroyAllWindows()
