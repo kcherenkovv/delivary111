@@ -15,7 +15,7 @@ if not cap.isOpened():
 # Отправка обработанного видео
 gst_out = (
     'appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast '
-    '! rtph264pay config-interval=1 pt=96 ! udpsink host=<YOUR_LOCAL_IP> port=5001'
+    '! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.1.10 port=5001'
 )
 out = cv2.VideoWriter(gst_out, cv2.CAP_GSTREAMER, 0, 25, (640, 480), True)
 
