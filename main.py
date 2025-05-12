@@ -19,7 +19,10 @@ FFMPEG_CMD = [
 process = subprocess.Popen(FFMPEG_CMD, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx")
+session_options = ort.SessionOptions()
+session_options.providers = ['CUDAExecutionProvider']
+
+model = YOLO("model_11v_optimized_nz.onnx", session=session_options)
 
 while True:
     raw_frame = process.stdout.read(WIDTH * HEIGHT * 3)  # 3 байта на пиксель (BGR)
