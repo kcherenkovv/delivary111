@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import subprocess  # ✅ Добавь этот импорт
 from ultralytics import YOLO
 
 # Параметры видеопотока
@@ -8,7 +9,7 @@ HEIGHT = 480
 FFMPEG_CMD = [
     'ffmpeg',
     '-i', 'udp://@0.0.0.0:5000',
-    '-pix_fmt', 'bgr24',      # Выходной формат
+    '-pix_fmt', 'bgr24',      # Выходной формат OpenCV
     '-f', 'image2pipe',       # Передача кадров через pipe
     '-vcodec', 'rawvideo',     # Не декодировать, просто передать
     '-'
@@ -18,7 +19,7 @@ FFMPEG_CMD = [
 process = subprocess.Popen(FFMPEG_CMD, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx")
+model = YOLO("yolov11s.onnx")
 
 while True:
     raw_frame = process.stdout.read(WIDTH * HEIGHT * 3)  # 3 байта на пиксель (BGR)
