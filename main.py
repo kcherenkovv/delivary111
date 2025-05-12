@@ -2,41 +2,41 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
+# Параметры видеопотока
+WIDTH = 640
+HEIGHT = 480
+FFMPEG_CMD = [
+    'ffmpeg',
+    '-i', 'udp://@0.0.0.0:5000',
+    '-pix_fmt', 'bgr24',      # Выходной формат
+    '-f', 'image2pipe',       # Передача кадров через pipe
+    '-vcodec', 'rawvideo',     # Не декодировать, просто передать
+    '-'
+]
+
+# Запуск ffmpeg как subprocess
+process = subprocess.Popen(FFMPEG_CMD, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx")  # замени на имя своей ONNX-модели
-
-# Приём стрима через GStreamer
-gst_pipeline = (
-    'udpsrc port=5000 ! application/x-rtp, media=video, clock-rate=90000, encoding-name=H264 ! '
-    'rtph264depay ! decodebin ! videoconvert ! appsink'
-)
-cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
-
-if not cap.isOpened():
-    print("Ошибка открытия входящего потока")
-    exit()
-
-# Отправка обратно через UDP
-gst_out = (
-    'appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=superfast '
-    '! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.1.8 port=5001'
-)
-out = cv2.VideoWriter(gst_out, cv2.CAP_GSTREAMER, 0, 25, (640, 480), True)
+model = YOLO("model_11v_optimized_nz.onnx")
 
 while True:
-    ret, frame = cap.read()
-    if not ret:
+    raw_frame = process.stdout.read(WIDTH * HEIGHT * 3)  # 3 байта на пиксель (BGR)
+    if len(raw_frame) != WIDTH * HEIGHT * 3:
+        print("Ошибка чтения кадра")
         continue
 
+    frame = np.frombuffer(raw_frame, dtype=np.uint8).reshape((HEIGHT, WIDTH, 3))
+
+    # Детекция
     results = model(frame)
     annotated_frame = results[0].plot()
 
-    out.write(annotated_frame)
-
+    # Показываем результат
     cv2.imshow('YOLOv11 Detection', annotated_frame)
     if cv2.waitKey(1) == ord('q'):
         break
 
-cap.release()
-out.release()
+# Очистка
+process.terminate()
 cv2.destroyAllWindows()
