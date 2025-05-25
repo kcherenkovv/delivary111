@@ -35,8 +35,7 @@ FFMPEG_SEND_CMD = [
 process_out = subprocess.Popen(FFMPEG_SEND_CMD, stdin=subprocess.PIPE)
 
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx")  # Сначала загружаем
-model.to("cuda")  # Затем переносим на GPU
+model = YOLO("model_11v_optimized_nz.onnx")
 
 print("✅ Ожидание кадров...")
 
