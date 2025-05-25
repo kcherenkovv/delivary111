@@ -29,6 +29,7 @@ FFMPEG_SEND_CMD = [
     '-vcodec', 'mjpeg',
     '-r', '25',
     '-s', f'{WIDTH}x{HEIGHT}',  # Указываем размер кадра
+    '-pix_fmt', 'yuvj420p',  # Указываем формат пикселей
     '-i', '-',
     '-f', 'mpegts',
     'udp://192.168.1.8:5500'
