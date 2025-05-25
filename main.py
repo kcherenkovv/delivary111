@@ -17,8 +17,6 @@ FFMPEG_RECEIVE_CMD = [
     '-s', f'{WIDTH}x{HEIGHT}',
     '-'
 ]
-
-# Запуск FFmpeg для приёма
 process_in = subprocess.Popen(FFMPEG_RECEIVE_CMD, stdout=subprocess.PIPE)
 
 # Команда для отправки обратно через UDP
@@ -28,8 +26,8 @@ FFMPEG_SEND_CMD = [
     '-f', 'image2pipe',
     '-vcodec', 'mjpeg',
     '-r', '25',
-    '-s', f'{WIDTH}x{HEIGHT}',  # Указываем размер кадра
-    '-pix_fmt', 'yuvj420p',  # Указываем формат пикселей
+    '-s', f'{WIDTH}x{HEIGHT}',
+    '-pix_fmt', 'yuvj420p',
     '-i', '-',
     '-f', 'mpegts',
     'udp://192.168.1.8:5500'
@@ -37,7 +35,8 @@ FFMPEG_SEND_CMD = [
 process_out = subprocess.Popen(FFMPEG_SEND_CMD, stdin=subprocess.PIPE)
 
 # Загрузка модели
-model = YOLO("model_11v_optimized_nz.onnx", device="cuda")
+model = YOLO("model_11v_optimized_nz.onnx")  # Сначала загружаем
+model.to("cuda")  # Затем переносим на GPU
 
 print("✅ Ожидание кадров...")
 
